@@ -109,19 +109,6 @@ python FiBREncoder_in_silico/train_9_input.py --num_GPUs 1 --save_path ./saved_m
 
 Both single-input and nine-input models require the Mamba CUDA dependencies and a compatible NVIDIA GPU. Checkpoints are written to `saved_models/` by default; use different `--save_path` directories for separate runs.
 
-## Reconstruction and simulation testing
+> [!NOTE]
 
-```bash
-python FiBRE_forward/test.py
-python FiBREncoder_in_silico/test_9_input.py
-```
-
-For single-input reconstruction, use a matching single-input U-Net–Mamba checkpoint:
-
-```bash
-python FiBREncoder_in_silico/test.py --weights saved_models/net_epoch_10.pth.tar
-```
-
-The defaults point to the supplied test images. Each script saves reconstructed/simulated grayscale PNG images and `metrics.csv` containing per-image PSNR, SSIM, MAE, and inference time. Predictions are clipped to [0, 1] for evaluation. No external custom-colormap module is required.
-
-Use `--inputs`, `--targets`, `--weights`, `--output`, `--device`, and `--num_workers` to override testing settings. For nine-input testing, `--inputs` points to the parent directory containing `X0`–`X8`. FiBRE testing also accepts `--core_data` and `--mode`.
+> This project is still under active development and documentation updates. Stay tuned for more updates!
