@@ -47,17 +47,17 @@ The included data contain one paired paper-tissue example and nine corresponding
 
 ## Model weights and test data
 
-Model weights and test data are available on Zenodo: [10.5281/zenodo.23457475](https://doi.org/10.5281/zenodo.23457475). Model weights are not included in this repository.
+Model weights and test data are available on Zenodo: [10.5281/zenodo.23457475](https://doi.org/10.5281/zenodo.23457475). Model weights are not included in this repository. For FiBREncoder, the Zenodo release provides U-Net–Mamba reconstruction weights only; **UNET_EDSR weights are not provided**. The single-input UNET_EDSR implementation remains available for training your own model.
 
 Extract the test data into `FiBRE_forward/test_images/` and `FiBREncoder_in_silico/test_data/`, preserving the directory structure shown above.
 
-Download the matching checkpoint and place it beside the relevant calibration, training, or test scripts:
+Place each checkpoint beside the corresponding script. The filenames below are local defaults expected by the scripts; use `--weights` to select a downloaded or locally trained checkpoint with a different filename:
 
-| Model | Default checkpoint |
-| --- | --- |
-| FiBRE, `PropagaModel_MC`, `base_sc_g` | `FiBRE_forward/fibre_calibrated.pth.tar` |
-| Single-input FiBREncoder, UNET_EDSR | `FiBREncoder_in_silico/fibrencoder_1_input.pth.tar` |
-| Nine-input FiBREncoder, Unet_ULMamba_multi_inputs | `FiBREncoder_in_silico/fibrencoder_9_input.pth.tar` |
+| Model | Default local checkpoint | Notes |
+| --- | --- | --- |
+| FiBRE, `PropagaModel_MC`, `base_sc_g` | `FiBRE_forward/fibre_calibrated.pth.tar` | Requires calibrated forward-model parameters. |
+| Nine-input FiBREncoder, `Unet_ULMamba_multi_inputs` | `FiBREncoder_in_silico/fibrencoder_9_input.pth.tar` | U-Net–Mamba reconstruction weights are provided on Zenodo; select a checkpoint matching this architecture. |
+| Single-input FiBREncoder, `UNET_EDSR` | `FiBREncoder_in_silico/fibrencoder_1_input.pth.tar` | Not provided on Zenodo; train with `train.py` before testing. |
 
 Checkpoints must contain a `state_dict` matching the selected architecture and, for FiBRE, the core geometry and mode. Test scripts accept `--weights` to select another filename. Calibration and reconstruction training start from scratch by default. FiBRE calibration uses `--precalib true --dir_precalib ./checkpoint.pth.tar` to load previously calibrated weights; FiBREncoder uses `--pretrain true --dir_pretrain ./checkpoint.pth.tar` to load initial model weights. This option does not restore the optimizer state.
 
@@ -100,7 +100,7 @@ training_data/
     X0/ ... X8/
 ```
 
-Single-input training uses `X0`; nine-input training uses all nine input directories. `HR_Train_80k` is the default folder name; paths may be overridden for datasets of other sizes. Nine-input training additionally evaluates the supplied experimental paper-tissue example; this example is used for validation/model selection and is not an independent held-out test set.
+Single-input `train.py` trains UNET_EDSR from `X0`; nine-input `train_9_input.py` trains U-Net–Mamba from all nine input directories. No pretrained UNET_EDSR checkpoint is distributed. `HR_Train_80k` is the default folder name; paths may be overridden for datasets of other sizes. Nine-input training additionally evaluates the supplied experimental paper-tissue example; this example is used for validation/model selection and is not an independent held-out test set.
 
 ```bash
 python FiBREncoder_in_silico/train.py --num_GPUs 1
@@ -113,8 +113,13 @@ For single-input CPU training, use `--num_GPUs 0`. The nine-input Mamba implemen
 
 ```bash
 python FiBRE_forward/test.py
-python FiBREncoder_in_silico/test.py
 python FiBREncoder_in_silico/test_9_input.py
+```
+
+The single-input test requires your own UNET_EDSR checkpoint; U-Net–Mamba weights cannot be loaded into UNET_EDSR:
+
+```bash
+python FiBREncoder_in_silico/test.py --weights saved_models/net_epoch_10.pth.tar
 ```
 
 The defaults point to the supplied test images. Each script saves reconstructed/simulated grayscale PNG images and `metrics.csv` containing per-image PSNR, SSIM, MAE, and inference time. Predictions are clipped to [0, 1] for evaluation. No external custom-colormap module is required.
