@@ -14,7 +14,7 @@ FiBRE models image formation through a multi-core fiber. FiBREncoder learns imag
 
 Target environment: **Python 3.10**, **PyTorch 2.0.1**, and **torchvision 0.15.2**.
 
-See [requirements.md](requirements.md) for the complete dependency list and installation commands, including the additional dependencies for the nine-input Mamba network.
+See [requirements.md](requirements.md) for the complete dependency list and installation commands, including the Mamba dependencies for both reconstruction networks.
 
 ## Repository layout
 
@@ -47,7 +47,7 @@ The included data contain one paired paper-tissue example and nine corresponding
 
 ## Model weights and test data
 
-Model weights and test data are available on Zenodo: [10.5281/zenodo.23457475](https://doi.org/10.5281/zenodo.23457475). Model weights are not included in this repository. For FiBREncoder, the Zenodo release provides U-Net–Mamba reconstruction weights only; **UNET_EDSR weights are not provided**. The single-input UNET_EDSR implementation remains available for training your own model.
+Model weights and test data are available on Zenodo: [10.5281/zenodo.23457475](https://doi.org/10.5281/zenodo.23457475). Model weights are not included in this repository. FiBREncoder training and testing use U-Net–Mamba reconstruction models. Select a released checkpoint matching the input count and architecture.
 
 Extract the test data into `FiBRE_forward/test_images/` and `FiBREncoder_in_silico/test_data/`, preserving the directory structure shown above.
 
@@ -56,8 +56,8 @@ Place each checkpoint beside the corresponding script. The filenames below are l
 | Model | Default local checkpoint | Notes |
 | --- | --- | --- |
 | FiBRE, `PropagaModel_MC`, `base_sc_g` | `FiBRE_forward/fibre_calibrated.pth.tar` | Requires calibrated forward-model parameters. |
+| Single-input FiBREncoder, `Unet_ULMamba` | `FiBREncoder_in_silico/fibrencoder_1_input.pth.tar` | Requires a matching single-input U-Net–Mamba checkpoint. |
 | Nine-input FiBREncoder, `Unet_ULMamba_multi_inputs` | `FiBREncoder_in_silico/fibrencoder_9_input.pth.tar` | U-Net–Mamba reconstruction weights are provided on Zenodo; select a checkpoint matching this architecture. |
-| Single-input FiBREncoder, `UNET_EDSR` | `FiBREncoder_in_silico/fibrencoder_1_input.pth.tar` | Not provided on Zenodo; train with `train.py` before testing. |
 
 Checkpoints must contain a `state_dict` matching the selected architecture and, for FiBRE, the core geometry and mode. Test scripts accept `--weights` to select another filename. Calibration and reconstruction training start from scratch by default. FiBRE calibration uses `--precalib true --dir_precalib ./checkpoint.pth.tar` to load previously calibrated weights; FiBREncoder uses `--pretrain true --dir_pretrain ./checkpoint.pth.tar` to load initial model weights. This option does not restore the optimizer state.
 
@@ -100,14 +100,14 @@ training_data/
     X0/ ... X8/
 ```
 
-Single-input `train.py` trains UNET_EDSR from `X0`; nine-input `train_9_input.py` trains U-Net–Mamba from all nine input directories. No pretrained UNET_EDSR checkpoint is distributed. `HR_Train_80k` is the default folder name; paths may be overridden for datasets of other sizes. Nine-input training additionally evaluates the supplied experimental paper-tissue example; this example is used for validation/model selection and is not an independent held-out test set.
+Single-input `train.py` trains U-Net–Mamba from `X0`; nine-input `train_9_input.py` trains its multi-input variant from all nine input directories. `HR_Train_80k` is the default folder name; paths may be overridden for datasets of other sizes. Nine-input training additionally evaluates the supplied experimental paper-tissue example; this example is used for validation/model selection and is not an independent held-out test set.
 
 ```bash
 python FiBREncoder_in_silico/train.py --num_GPUs 1
 python FiBREncoder_in_silico/train_9_input.py --num_GPUs 1 --save_path ./saved_models_9/
 ```
 
-For single-input CPU training, use `--num_GPUs 0`. The nine-input Mamba implementation requires its CUDA dependencies. Checkpoints are written to `saved_models/` by default; use different `--save_path` directories for separate runs.
+Both single-input and nine-input models require the Mamba CUDA dependencies and a compatible NVIDIA GPU. Checkpoints are written to `saved_models/` by default; use different `--save_path` directories for separate runs.
 
 ## Reconstruction and simulation testing
 
@@ -116,7 +116,7 @@ python FiBRE_forward/test.py
 python FiBREncoder_in_silico/test_9_input.py
 ```
 
-The single-input test requires your own UNET_EDSR checkpoint; U-Net–Mamba weights cannot be loaded into UNET_EDSR:
+For single-input reconstruction, use a matching single-input U-Net–Mamba checkpoint:
 
 ```bash
 python FiBREncoder_in_silico/test.py --weights saved_models/net_epoch_10.pth.tar
