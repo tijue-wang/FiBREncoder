@@ -109,6 +109,6 @@ python FiBREncoder_in_silico/train_9_input.py --num_GPUs 1 --save_path ./saved_m
 
 Both single-input and nine-input models require the Mamba CUDA dependencies and a compatible NVIDIA GPU. Checkpoints are written to `saved_models/` by default; use different `--save_path` directories for separate runs.
 
-> [!NOTE]
+### NOTE
 
 > This project is still under active development and documentation updates. Stay tuned for more updates!
